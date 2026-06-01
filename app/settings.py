@@ -52,3 +52,6 @@ class Settings:
     model_cache_dir: str | None = field(
         default_factory=lambda: os.getenv("MODEL_CACHE_DIR") or None
     )
+    model_device: str = field(
+        default_factory=lambda: os.getenv("MODEL_DEVICE", "auto").strip() or "auto"
+    )

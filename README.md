@@ -47,6 +47,43 @@ Default address:
 
 - `http://localhost:8010`
 
+## GPU inference
+
+The service can force device selection with `MODEL_DEVICE`:
+
+- `auto`: use CUDA when available, otherwise CPU
+- `cpu`: always use CPU
+- `cuda`: require the first CUDA device
+- `cuda:0`, `cuda:1`, ...: require a specific CUDA device
+
+If `MODEL_DEVICE` is set to `cuda` or `cuda:N` and no CUDA device is available, startup fails instead of silently falling back to CPU.
+
+For a Docker image that installs the CUDA-enabled PyTorch wheel, build with:
+
+```bash
+docker build \
+  --build-arg PIP_EXTRA_INDEX_URL=https://download.pytorch.org/whl/cu128 \
+  -t sentir-mais-classifier:gpu .
+```
+
+Run it with GPU access:
+
+```bash
+docker run --rm --gpus all \
+  -e MODEL_DEVICE=cuda \
+  -p 8010:8010 \
+  sentir-mais-classifier:gpu
+```
+
+## Published images
+
+The GitHub workflow publishes two container variants to GHCR:
+
+- `ghcr.io/ravilock/sentir-mais-classifier:latest`: default CPU-oriented image
+- `ghcr.io/ravilock/sentir-mais-classifier:latest-gpu`: image built with the CUDA PyTorch wheel
+
+Branch, tag, and SHA tags follow the same pattern, with the GPU variant using the `-gpu` suffix.
+
 ## Tests
 
 Create a virtual environment if you want isolation:
@@ -84,6 +121,7 @@ pytest tests/test_main.py
 - `HYPOTHESIS_TEMPLATE`
 - `MODEL_CACHE_DIR`
 - `TRUST_REMOTE_CODE`
+- `MODEL_DEVICE`
 
 ## API
 

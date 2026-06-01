@@ -5,11 +5,13 @@ ENV PYTHONUNBUFFERED=1
 
 WORKDIR /app
 
+ARG PIP_EXTRA_INDEX_URL=""
+
 COPY pyproject.toml README.md ./
 COPY app ./app
 
 RUN pip install --no-cache-dir --upgrade pip \
-    && pip install --no-cache-dir .
+    && if [ -n "$PIP_EXTRA_INDEX_URL" ]; then pip install --no-cache-dir --extra-index-url "$PIP_EXTRA_INDEX_URL" .; else pip install --no-cache-dir .; fi
 
 EXPOSE 8010
 

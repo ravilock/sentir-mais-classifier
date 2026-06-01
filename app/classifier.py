@@ -34,6 +34,36 @@ class FeelingClassifier:
     def is_loaded(self) -> bool:
         return self._state.pipeline is not None
 
+    def _resolve_device(self) -> int | str:
+        configured = self._settings.model_device.lower()
+
+        if configured == "auto":
+            return 0 if torch.cuda.is_available() else -1
+
+        if configured == "cpu":
+            return -1
+
+        if configured == "cuda":
+            if not torch.cuda.is_available():
+                raise RuntimeError("MODEL_DEVICE=cuda but no CUDA device is available")
+            return 0
+
+        if configured.startswith("cuda:"):
+            if not torch.cuda.is_available():
+                raise RuntimeError(
+                    f"MODEL_DEVICE={self._settings.model_device} but no CUDA device is available"
+                )
+
+            device_index = configured.removeprefix("cuda:")
+            if not device_index.isdigit():
+                raise ValueError(
+                    f"Unsupported MODEL_DEVICE value: {self._settings.model_device}"
+                )
+
+            return int(device_index)
+
+        raise ValueError(f"Unsupported MODEL_DEVICE value: {self._settings.model_device}")
+
     def load(self) -> None:
         if self._state.pipeline is not None:
             return
@@ -42,11 +72,10 @@ class FeelingClassifier:
             if self._state.pipeline is not None:
                 return
 
-            device = 0 if torch.cuda.is_available() else -1
             self._state.pipeline = pipeline(
                 task="zero-shot-classification",
                 model=self._settings.model_name,
-                device=device,
+                device=self._resolve_device(),
                 trust_remote_code=self._settings.trust_remote_code,
                 model_kwargs={
                     "cache_dir": self._settings.model_cache_dir,

@@ -34,6 +34,31 @@ def test_classifier_loads_pipeline_once(monkeypatch) -> None:
     assert calls[0]["device"] == -1
 
 
+def test_classifier_uses_configured_cuda_device(monkeypatch) -> None:
+    monkeypatch.setattr("app.classifier.torch.cuda.is_available", lambda: True)
+
+    settings = Settings(model_name="fake-model")
+    object.__setattr__(settings, "model_device", "cuda:1")
+    classifier = FeelingClassifier(settings)
+
+    assert classifier._resolve_device() == 1
+
+
+def test_classifier_raises_when_cuda_is_required_but_unavailable(monkeypatch) -> None:
+    monkeypatch.setattr("app.classifier.torch.cuda.is_available", lambda: False)
+
+    settings = Settings(model_name="fake-model")
+    object.__setattr__(settings, "model_device", "cuda")
+    classifier = FeelingClassifier(settings)
+
+    try:
+        classifier._resolve_device()
+    except RuntimeError as exc:
+        assert str(exc) == "MODEL_DEVICE=cuda but no CUDA device is available"
+    else:
+        raise AssertionError("classifier should fail when CUDA is required")
+
+
 def test_classifier_returns_ranked_scores(monkeypatch) -> None:
     class FakePipeline:
         def __call__(self, **kwargs):
