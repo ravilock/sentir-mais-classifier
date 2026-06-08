@@ -115,6 +115,7 @@ pytest tests/test_main.py
 
 - `HOST`
 - `PORT`
+- `LOG_LEVEL`
 - `API_KEY`
 - `MODEL_NAME`
 - `DEFAULT_LABELS`

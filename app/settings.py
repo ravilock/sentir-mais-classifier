@@ -30,6 +30,7 @@ class Settings:
     app_name: str = "sentir-mais-classifier"
     host: str = field(default_factory=lambda: os.getenv("HOST", "0.0.0.0"))
     port: int = field(default_factory=lambda: int(os.getenv("PORT", "8010")))
+    log_level: str = field(default_factory=lambda: os.getenv("LOG_LEVEL", "INFO"))
     api_key: str = field(default_factory=lambda: os.getenv("API_KEY", ""))
     model_name: str = field(
         default_factory=lambda: os.getenv(
